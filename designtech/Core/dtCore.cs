@@ -5,7 +5,6 @@ using System.Text;
 using System.Globalization;
 using System.Threading.Tasks;
 using Autodesk.DesignScript.Runtime;
-using System.Text.RegularExpressions;
 
 namespace dtCore
 {
