@@ -955,6 +955,34 @@ namespace dtRevit
         }
         #endregion
 
+        #region GetParameters
+        /// <summary>
+        /// description
+        /// </summary>
+        /// <param name="element"></param>
+        /// <param name="name"></param>
+        /// <search>
+        /// revit, parameters, search keywords
+        /// </search>
+        public static object GetParameters(Revit.Elements.Element element, string name)
+        {
+            Document doc = RevitServices.Persistence.DocumentManager.Instance.CurrentDBDocument;
+
+            Autodesk.Revit.DB.Element uwElement = element.InternalElement;
+
+            IList<Autodesk.Revit.DB.Parameter> paramList = uwElement.GetParameters(name);
+
+            List<string> output = new List<string>();
+
+            foreach (Autodesk.Revit.DB.Parameter p in paramList)
+            {
+                output.Add(p.AsValueString());
+            }
+
+            return output;
+        }
+        #endregion
+
         #region ReplaceFamilyParameter
         /// <summary>
         /// Replace a family parameter with a shared parameter.

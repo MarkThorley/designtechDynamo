@@ -457,7 +457,7 @@ namespace dtDynamo
         }
         #endregion
 
-        #region Nickname
+        /*#region Nickname
         /// <summary>
         /// Retrieves the nickname of the node
         /// </summary>
@@ -470,7 +470,7 @@ namespace dtDynamo
         {
             return node.NickName;
         }
-        #endregion
+        #endregion*/
 
         #region Position
         /// <summary>
