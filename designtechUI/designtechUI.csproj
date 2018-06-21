@@ -141,11 +141,17 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegEx\RegEx.cs" />
+    <Compile Include="Revit\Revit.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy "$(ProjectDir)bin\debug\*.xml" "$(Appdata)\Dynamo\Dynamo Core\1.3\packages\designtech\bin"
+copy "$(ProjectDir)bin\debug\*.dll" "$(AppData)\Dynamo\Dynamo Core\1.3\packages\designtech\bin"</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

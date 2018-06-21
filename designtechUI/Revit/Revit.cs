@@ -7,15 +7,15 @@ using Autodesk.Revit.DB;
 using Revit.Elements;
 
 
-namespace dtRegularExpression
+namespace dtRevit
 {
-    [NodeName("ClassTypes")]
-    [NodeCategory("designtech.dtRegularExpression.RegEx")]
-    [NodeDescription("RegEx class types selection")]
+    [NodeName("ViewTypes")]
+    [NodeCategory("designtech.dtRevit.Collector")]
+    [NodeDescription("A drop down list of levels based on their elevational height")]
     [IsDesignScriptCompatible]
-    public class ClassTypes : DSDropDownBase
+    public class ViewTypes : DSDropDownBase
     {
-        public ClassTypes() : base("RegExClassType") { }
+        public ViewTypes() : base("Levels") { }
 
         protected override SelectionState PopulateItemsCore(string currentSelection)
         {
@@ -30,16 +30,25 @@ namespace dtRegularExpression
             // Create a number of DynamoDropDownItem objects 
             // to store the items that we want to appear in our list.
 
-            var newItems = new List<DynamoDropDownItem>()
+            Document doc = RevitServices.Persistence.DocumentManager.Instance.CurrentDBDocument;
+            var allLevels = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Levels).WhereElementIsNotElementType().Cast<Autodesk.Revit.DB.Level>();
+
+            Dictionary<Autodesk.Revit.DB.Level, double> dict = new Dictionary<Autodesk.Revit.DB.Level, double>();
+            foreach (Autodesk.Revit.DB.Level level in allLevels)
             {
-                new DynamoDropDownItem("Fixed", "ClassType.Fixed"),
-                new DynamoDropDownItem("List", "ClassType.List"),
-                new DynamoDropDownItem("Varies", "ClassType.Varies"),
-                new DynamoDropDownItem("Minimum", "ClassType.Minimum"),
-                new DynamoDropDownItem("Maximum", "ClassType.Maximum"),
-                new DynamoDropDownItem("Range", "ClassType.Range"),
-                new DynamoDropDownItem("Count", "ClassType.Count")
-            };
+                double elevation = level.Elevation;
+                dict.Add(level, elevation);
+            }
+
+            var items = from pair in dict orderby pair.Value ascending select pair;
+
+            List<DynamoDropDownItem> newItems = new List<DynamoDropDownItem>();
+
+            foreach (KeyValuePair<Autodesk.Revit.DB.Level, double> i in items)
+            {
+                DynamoDropDownItem item = new DynamoDropDownItem(i.Key.Name, i);
+                newItems.Add(item);
+            }
 
             foreach (var e in newItems)
             {
@@ -63,6 +72,5 @@ namespace dtRegularExpression
             return new List<AssociativeNode> { assign };
         }
     }
-
-
 }
+
