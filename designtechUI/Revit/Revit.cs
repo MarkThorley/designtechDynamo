@@ -4,21 +4,26 @@ using Dynamo.Graph.Nodes;
 using ProtoCore.AST.AssociativeAST;
 using System.Linq;
 using Autodesk.Revit.DB;
-using Revit.Elements;
+using System;
+using Dynamo.Utilities;
+using ElementSelector = Revit.Elements.ElementSelector;
 
 
 namespace dtRevit
 {
-    [NodeName("ViewTypes")]
+    [NodeName("SortedLevels")]
     [NodeCategory("designtech.dtRevit.Collector")]
     [NodeDescription("A drop down list of levels based on their elevational height")]
     [IsDesignScriptCompatible]
-    public class ViewTypes : DSDropDownBase
+    public class SortedLevels : DSDropDownBase
     {
-        public ViewTypes() : base("Levels") { }
+        private const string NoLevels = "No levels were found.";
+
+        public SortedLevels() : base("SortedLevels") { }
 
         protected override SelectionState PopulateItemsCore(string currentSelection)
         {
+
             // The Items collection contains the elements
             // that appear in the list. For this example, we
             // clear the list before adding new items, but you
@@ -32,7 +37,7 @@ namespace dtRevit
 
             Document doc = RevitServices.Persistence.DocumentManager.Instance.CurrentDBDocument;
             var allLevels = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Levels).WhereElementIsNotElementType().Cast<Autodesk.Revit.DB.Level>();
-
+        
             Dictionary<Autodesk.Revit.DB.Level, double> dict = new Dictionary<Autodesk.Revit.DB.Level, double>();
             foreach (Autodesk.Revit.DB.Level level in allLevels)
             {
@@ -42,34 +47,85 @@ namespace dtRevit
 
             var items = from pair in dict orderby pair.Value ascending select pair;
 
-            List<DynamoDropDownItem> newItems = new List<DynamoDropDownItem>();
-
+            var sortedLevels = new List<Autodesk.Revit.DB.Level>();
             foreach (KeyValuePair<Autodesk.Revit.DB.Level, double> i in items)
             {
-                DynamoDropDownItem item = new DynamoDropDownItem(i.Key.Name, i);
-                newItems.Add(item);
+                sortedLevels.Add(i.Key);
             }
-
-            foreach (var e in newItems)
+            
+            if (sortedLevels.Count == 0)
             {
-                Items.Add(e);
+                Items.Add(new DynamoDropDownItem(NoLevels, null));
+                SelectedIndex = 0;
+                return SelectionState.Done;
             }
-            // Set the selected index to something other
-            // than -1, the default, so that your list
-            // has a pre-selection.
 
-            SelectedIndex = 0;
-            return SelectionState.Done;
+            DisplayUnitType units = doc.GetUnits().GetFormatOptions(UnitType.UT_Length).DisplayUnits;
+
+            foreach (var lvl in sortedLevels)
+            {
+                string elevation = "";
+                if (units == DisplayUnitType.DUT_DECIMAL_FEET)
+                {
+                    double unit = Math.Round(lvl.Elevation, 2);
+                    elevation = unit.ToString() + "ft";
+                }
+                else if (units == DisplayUnitType.DUT_DECIMAL_INCHES)
+                {
+                    double unit = Math.Round(lvl.Elevation * 12, 2);
+                    elevation = unit.ToString() + "\"";
+                }
+                else if (units == DisplayUnitType.DUT_CENTIMETERS)
+                {
+                    double unit = Math.Round(lvl.Elevation * 30.48, 2);
+                    elevation = unit.ToString() + "cm";
+                }
+                else if (units == DisplayUnitType.DUT_METERS)
+                {
+                    double unit = Math.Round(lvl.Elevation * 0.3048, 2);
+                    elevation = unit.ToString() + "m";
+                }
+                else
+                {
+                    double unit = Math.Round(lvl.Elevation * 304.8, 2);
+                    elevation = unit.ToString() + "mm";
+                }
+
+
+                string str = lvl.Name + " | " + elevation;
+                Items.Add(new DynamoDropDownItem(str, lvl));
+            }
+            return SelectionState.Restore;
+
         }
 
         public override IEnumerable<AssociativeNode> BuildOutputAst(List<AssociativeNode> inputAstNodes)
         {
-            // Build an AST node for the type of object contained in your Items collection.
+            AssociativeNode node;
 
-            var intNode = AstFactory.BuildStringNode((string)Items[SelectedIndex].Item);
-            var assign = AstFactory.BuildAssignment(GetAstIdentifierForOutputIndex(0), intNode);
+            if (SelectedIndex == -1)
+            {
+                node = AstFactory.BuildNullNode();
+            }
+            else
+            {
+                var level = Items[SelectedIndex].Item as Autodesk.Revit.DB.Level;
+                if (level == null)
+                {
+                    node = AstFactory.BuildNullNode();
+                }
+                else
+                {
+                    var idNode = AstFactory.BuildStringNode(level.UniqueId);
+                    var falseNode = AstFactory.BuildBooleanNode(true);
 
-            return new List<AssociativeNode> { assign };
+                    node = AstFactory.BuildFunctionCall(
+                        new Func<string, bool, object>(ElementSelector.ByUniqueId),
+                        new List<AssociativeNode> { idNode, falseNode });
+                }
+            }
+
+            return new[] { AstFactory.BuildAssignment(GetAstIdentifierForOutputIndex(0), node) };
         }
     }
 }
