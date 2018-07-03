@@ -38,7 +38,7 @@ namespace dtRevit
             // to store the items that we want to appear in our list.
 
             Document doc = RevitServices.Persistence.DocumentManager.Instance.CurrentDBDocument;
-            List<Autodesk.Revit.DB.Architecture.Railing> allRailings = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Railings).WhereElementIsNotElementType().Cast<Autodesk.Revit.DB.Architecture.Railing>().ToList();
+            List<Autodesk.Revit.DB.Architecture.Railing> allRailings = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_StairsRailing).WhereElementIsElementType().Cast<Autodesk.Revit.DB.Architecture.Railing>().ToList();
 
             if (allRailings.Count == 0)
             {
