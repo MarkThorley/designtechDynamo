@@ -1298,6 +1298,61 @@ namespace dtRevit
 
     }
 
+    public class Railing
+    {
+        internal Railing()
+        {
+
+        }
+
+        #region Create
+        /// <summary>
+        /// Creates a rail in Revit based on a curve and railing type
+        /// </summary>
+        /// <param name="curveList[]">a list of placement curves</param>
+        /// <param name="railingType">railing family type</param>
+        /// <param name="hostLevel">the level to host the rail on</param>
+        /// <returns name="element">railing instance</returns>
+        /// <search>
+        /// revit, instance, document, rail, railing, type, create, place, level, host, family, curve
+        /// </search>
+        public static Revit.Elements.Element Create(List<Autodesk.DesignScript.Geometry.Curve> curveList, Revit.Elements.Element railingType, Revit.Elements.Level hostLevel)
+        {
+            Document doc = RevitServices.Persistence.DocumentManager.Instance.CurrentDBDocument;
+
+            CurveLoop curveLoop = new CurveLoop();
+            foreach (Autodesk.DesignScript.Geometry.Curve curve in curveList)
+            {
+                curveLoop.Append(curve.ToRevitType());
+            }
+
+            Autodesk.Revit.DB.Element uwRailingType = railingType.InternalElement;
+            Autodesk.Revit.DB.Architecture.RailingType rType = uwRailingType as Autodesk.Revit.DB.Architecture.RailingType;
+
+            Autodesk.Revit.DB.ElementId railId = rType.Id;
+
+            Autodesk.Revit.DB.Element uwHostLevel = hostLevel.InternalElement;
+            Autodesk.Revit.DB.Level hostLvl = uwHostLevel as Autodesk.Revit.DB.Level;
+
+            Autodesk.Revit.DB.ElementId lvlId = hostLvl.Id;
+
+            RevitServices.Transactions.TransactionManager.Instance.EnsureInTransaction(doc);
+            try
+            {
+                Autodesk.Revit.DB.Architecture.Railing railInstance = Autodesk.Revit.DB.Architecture.Railing.Create(doc, curveLoop, railId, lvlId);
+                RevitServices.Transactions.TransactionManager.Instance.TransactionTaskDone();
+                return railInstance.ToDSType(true);
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
+            
+        }
+        #endregion
+
+    }
+
     public class RvtLink
     {
         internal RvtLink()

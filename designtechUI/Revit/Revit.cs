@@ -38,7 +38,7 @@ namespace dtRevit
             // to store the items that we want to appear in our list.
 
             Document doc = RevitServices.Persistence.DocumentManager.Instance.CurrentDBDocument;
-            List<Autodesk.Revit.DB.Architecture.Railing> allRailings = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_StairsRailing).WhereElementIsElementType().Cast<Autodesk.Revit.DB.Architecture.Railing>().ToList();
+            List<Autodesk.Revit.DB.Architecture.RailingType> allRailings = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_StairsRailing).WhereElementIsElementType().Cast<Autodesk.Revit.DB.Architecture.RailingType>().ToList();
 
             if (allRailings.Count == 0)
             {
@@ -47,7 +47,7 @@ namespace dtRevit
                 return SelectionState.Done;
             }
 
-            foreach (Autodesk.Revit.DB.Architecture.Railing rail in allRailings)
+            foreach (Autodesk.Revit.DB.Architecture.RailingType rail in allRailings)
             { 
                 string str = rail.Name;
                 Items.Add(new DynamoDropDownItem(str, rail));
@@ -66,7 +66,7 @@ namespace dtRevit
             }
             else
             {
-                var rail = Items[SelectedIndex].Item as Autodesk.Revit.DB.Architecture.Railing;
+                var rail = Items[SelectedIndex].Item as Autodesk.Revit.DB.Architecture.RailingType;
                 if (rail == null)
                 {
                     node = AstFactory.BuildNullNode();
