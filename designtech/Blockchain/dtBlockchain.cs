@@ -34,7 +34,7 @@ namespace dtBlockchain
             list.Add("Index: " + index.ToString());
             list.Add("Timestamp: " + timestamp.ToString());
             list.Add("Data: " + data.ToString());
-            list.Add("Hash: " + hash.ToString());
+            list.Add("Hash: " + hash.Hash.ToString());
             list.Add("Previous Hash: " + previousHash.ToString());
             return list;
 
@@ -111,7 +111,11 @@ namespace dtBlockchain
             DateTime thisTimestamp = DateTime.Now;
             string thisData = "block" + thisIndex.ToString() + "data";
             string hashString = thisIndex.ToString() + thisTimestamp.ToString() + thisData.ToString();
-            SHA256 thisHash = SHA256.Create(hashString);
+            SHA256 thisHash = SHA256.Create();
+            using (MemoryStream ms = new MemoryStream(System.Text.Encoding.ASCII.GetBytes(hashString)))
+            {
+                thisHash.ComputeHash(ms);
+            }
             string str2 = lastBlock[3].ToString();
             string rep2 = str2.Replace(" ", "");
             string[] split2 = rep2.Split(c);
