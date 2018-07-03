@@ -11,6 +11,83 @@ using ElementSelector = Revit.Elements.ElementSelector;
 
 namespace dtRevit
 {
+
+    #region Railings
+    [NodeName("Railings")]
+    [NodeCategory("designtech.dtRevit.Collector")]
+    [NodeDescription("A drop down list of railings in the model")]
+    [IsDesignScriptCompatible]
+    public class Railings : DSDropDownBase
+    {
+        private const string NoRailings = "No railings were found.";
+
+        public Railings() : base("Railings") { }
+
+        protected override SelectionState PopulateItemsCore(string currentSelection)
+        {
+
+            // The Items collection contains the elements
+            // that appear in the list. For this example, we
+            // clear the list before adding new items, but you
+            // can also use the PopulateItems method to add items
+            // to the list.
+
+            Items.Clear();
+
+            // Create a number of DynamoDropDownItem objects 
+            // to store the items that we want to appear in our list.
+
+            Document doc = RevitServices.Persistence.DocumentManager.Instance.CurrentDBDocument;
+            List<Autodesk.Revit.DB.Architecture.Railing> allRailings = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Railings).WhereElementIsNotElementType().Cast<Autodesk.Revit.DB.Architecture.Railing>().ToList();
+
+            if (allRailings.Count == 0)
+            {
+                Items.Add(new DynamoDropDownItem(NoRailings, null));
+                SelectedIndex = 0;
+                return SelectionState.Done;
+            }
+
+            foreach (Autodesk.Revit.DB.Architecture.Railing rail in allRailings)
+            { 
+                string str = rail.Name;
+                Items.Add(new DynamoDropDownItem(str, rail));
+            }
+            return SelectionState.Restore;
+
+        }
+
+        public override IEnumerable<AssociativeNode> BuildOutputAst(List<AssociativeNode> inputAstNodes)
+        {
+            AssociativeNode node;
+
+            if (SelectedIndex == -1)
+            {
+                node = AstFactory.BuildNullNode();
+            }
+            else
+            {
+                var rail = Items[SelectedIndex].Item as Autodesk.Revit.DB.Architecture.Railing;
+                if (rail == null)
+                {
+                    node = AstFactory.BuildNullNode();
+                }
+                else
+                {
+                    var idNode = AstFactory.BuildStringNode(rail.UniqueId);
+                    var falseNode = AstFactory.BuildBooleanNode(true);
+
+                    node = AstFactory.BuildFunctionCall(
+                        new Func<string, bool, object>(ElementSelector.ByUniqueId),
+                        new List<AssociativeNode> { idNode, falseNode });
+                }
+            }
+
+            return new[] { AstFactory.BuildAssignment(GetAstIdentifierForOutputIndex(0), node) };
+        }
+    }
+    #endregion
+
+    #region SortedLevels
     [NodeName("SortedLevels")]
     [NodeCategory("designtech.dtRevit.Collector")]
     [NodeDescription("A drop down list of levels based on their elevational height")]
@@ -128,5 +205,8 @@ namespace dtRevit
             return new[] { AstFactory.BuildAssignment(GetAstIdentifierForOutputIndex(0), node) };
         }
     }
+    #endregion
+
+
 }
 
