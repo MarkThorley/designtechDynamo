@@ -34,7 +34,15 @@ namespace dtBlockchain
             list.Add("Index: " + index.ToString());
             list.Add("Timestamp: " + timestamp.ToString());
             list.Add("Data: " + data.ToString());
-            list.Add("Hash: " + hash.Hash.ToString());
+            byte[] hashAlg = hash.Hash;
+
+            string hashString = string.Empty;
+            foreach (byte x in hashAlg)
+            {
+                hashString += String.Format("{0:x2}", x);
+            }
+
+            list.Add("Hash: " + hashString);
             list.Add("Previous Hash: " + previousHash.ToString());
             return list;
 
@@ -49,16 +57,15 @@ namespace dtBlockchain
         /// <search>
         /// blockchain, create
         /// </search>
-        public static object CreateBlockchain(int count)
+        public static List<List<object>> CreateBlockchain(int count)
         {
-            var blockchain = dtBlockchain.Blockchain.CreateGenesisBlock();
-            List<object> blockList = new List<object>();
+            List<object> blockchain = dtBlockchain.Blockchain.CreateGenesisBlock();
+            List<List<object>> blockList = new List<List<object>>();
             blockList.Add(blockchain);
 
-
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < count-1; i++)
             {
-                var addBlock = dtBlockchain.Blockchain.NextBlock(blockList);
+                List<object> addBlock = dtBlockchain.Blockchain.NextBlock(blockList);
                 blockList.Add(addBlock);
             }
             return blockList;
@@ -74,19 +81,19 @@ namespace dtBlockchain
         /// <search>
         /// create, block, hash, sha256, blockchain, genesis, start
         /// </search>
-        public static object CreateGenesisBlock()
+        public static List<object> CreateGenesisBlock()
         {
             int index = 0;
             DateTime timestamp = DateTime.Now;
             string data = "Genesis Block";
             string str = index.ToString() + timestamp.ToString() + data.ToString();
             SHA256 hash = SHA256.Create();
-            using (MemoryStream ms = new MemoryStream(System.Text.Encoding.ASCII.GetBytes(str)))
+            using (MemoryStream ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(str)))
             {
                 hash.ComputeHash(ms);
             }
             string previousHash = "";
-            object blk = dtBlockchain.Blockchain.CreateBlock(index, timestamp, data, hash, previousHash);
+            List<object> blk = dtBlockchain.Blockchain.CreateBlock(index, timestamp, data, hash, previousHash);
             return blk;
         }
         #endregion
@@ -100,9 +107,10 @@ namespace dtBlockchain
         /// <search>
         /// create, block, hash, sha256, blockchain, next
         /// </search>
-        public static object NextBlock(List<object> lastBlock)
+        public static List<object> NextBlock(List<List<object>> lastBlock)
         {
-            string str = lastBlock[0].ToString();
+            List<object> obj = lastBlock.Last();
+            string str = obj[0].ToString();
             string rep = str.Replace(" ", "");
             string s = ":";
             char[] c = s.ToCharArray();
@@ -112,11 +120,11 @@ namespace dtBlockchain
             string thisData = "block" + thisIndex.ToString() + "data";
             string hashString = thisIndex.ToString() + thisTimestamp.ToString() + thisData.ToString();
             SHA256 thisHash = SHA256.Create();
-            using (MemoryStream ms = new MemoryStream(System.Text.Encoding.ASCII.GetBytes(hashString)))
+            using (MemoryStream ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(hashString)))
             {
                 thisHash.ComputeHash(ms);
             }
-            string str2 = lastBlock[3].ToString();
+            string str2 = obj[3].ToString();
             string rep2 = str2.Replace(" ", "");
             string[] split2 = rep2.Split(c);
             string thisPreviousHash = split2[1];
