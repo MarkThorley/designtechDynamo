@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
+using System.IO;
 
 namespace dtBlockchain
 {
-    class Blockchain
+    public class Blockchain
     {
         internal Blockchain()
         {
@@ -27,7 +28,7 @@ namespace dtBlockchain
         /// <search>
         /// create, block, hash, sha256, blockchain
         /// </search>
-        private static object CreateBlock(int index, DateTime timestamp, string data, object hash, string previousHash)
+        public static List<object> CreateBlock(int index, DateTime timestamp, string data, SHA256 hash, string previousHash)
         {
             List<object> list = new List<object>();
             list.Add("Index: " + index.ToString());
@@ -48,7 +49,7 @@ namespace dtBlockchain
         /// <search>
         /// blockchain, create
         /// </search>
-        private static object CreateBlockchain(int count)
+        public static object CreateBlockchain(int count)
         {
             var blockchain = dtBlockchain.Blockchain.CreateGenesisBlock();
             List<object> blockList = new List<object>();
@@ -73,13 +74,17 @@ namespace dtBlockchain
         /// <search>
         /// create, block, hash, sha256, blockchain, genesis, start
         /// </search>
-        private static object CreateGenesisBlock()
+        public static object CreateGenesisBlock()
         {
             int index = 0;
             DateTime timestamp = DateTime.Now;
             string data = "Genesis Block";
             string str = index.ToString() + timestamp.ToString() + data.ToString();
-            SHA256 hash = SHA256.Create(str);
+            SHA256 hash = SHA256.Create();
+            using (MemoryStream ms = new MemoryStream(System.Text.Encoding.ASCII.GetBytes(str)))
+            {
+                hash.ComputeHash(ms);
+            }
             string previousHash = "";
             object blk = dtBlockchain.Blockchain.CreateBlock(index, timestamp, data, hash, previousHash);
             return blk;
@@ -95,7 +100,7 @@ namespace dtBlockchain
         /// <search>
         /// create, block, hash, sha256, blockchain, next
         /// </search>
-        private static object NextBlock(List<object> lastBlock)
+        public static object NextBlock(List<object> lastBlock)
         {
             string str = lastBlock[0].ToString();
             string rep = str.Replace(" ", "");
