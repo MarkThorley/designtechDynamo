@@ -188,7 +188,6 @@
     <Compile Include="Dynamo\dtDynamo.cs" />
     <Compile Include="Geometry\dtGeometry.cs" />
     <Compile Include="Core\dtCore.cs" />
-    <Compile Include="Mace\Mace.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegularExpression\dtRegularExpression.cs" />
     <Compile Include="Revit\dtRevit.cs" />
