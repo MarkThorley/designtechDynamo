@@ -8,14 +8,21 @@ using System.IO;
 
 namespace dtBlockchain
 {
-    public class Blockchain
+    public class Block
     {
-        internal Blockchain()
+        internal Block()
         {
 
         }
 
-        #region CreateBlock
+        //Fields
+        public int Index { get; set; }
+        public DateTime Timestamp { get; set; }
+        public string Data { get; set; }
+        public SHA256 ThisHash { get; set; }
+        public SHA256 PreviousHash { get; set; }
+
+        #region Create
         /// <summary>
         /// Creates a block for the block chain
         /// </summary>
@@ -28,48 +35,17 @@ namespace dtBlockchain
         /// <search>
         /// create, block, hash, sha256, blockchain
         /// </search>
-        public static List<object> CreateBlock(int index, DateTime timestamp, string data, SHA256 hash, string previousHash)
+        public static Block Create(int index, DateTime timestamp, string data, SHA256 hash, SHA256 previousHash)
         {
-            List<object> list = new List<object>();
-            list.Add("Index: " + index.ToString());
-            list.Add("Timestamp: " + timestamp.ToString());
-            list.Add("Data: " + data.ToString());
-            byte[] hashAlg = hash.Hash;
+            Block block = new Block();
 
-            string hashString = string.Empty;
-            foreach (byte x in hashAlg)
-            {
-                hashString += String.Format("{0:x2}", x);
-            }
+            block.Index = index;
+            block.Timestamp = timestamp;
+            block.Data = data;
+            block.ThisHash = hash;
+            block.PreviousHash = previousHash;
 
-            list.Add("Hash: " + hashString);
-            list.Add("Previous Hash: " + previousHash.ToString());
-            return list;
-
-        }
-        #endregion
-
-        #region CreateBlockchain
-        /// <summary>
-        /// Creates the initial genesis block used in a blockchain
-        /// </summary>
-        /// <param name="count">count</param>
-        /// <search>
-        /// blockchain, create
-        /// </search>
-        public static List<List<object>> CreateBlockchain(int count)
-        {
-            List<object> blockchain = dtBlockchain.Blockchain.CreateGenesisBlock();
-            List<List<object>> blockList = new List<List<object>>();
-            blockList.Add(blockchain);
-
-            for (int i = 0; i < count-1; i++)
-            {
-                List<object> addBlock = dtBlockchain.Blockchain.NextBlock(blockList);
-                blockList.Add(addBlock);
-            }
-            return blockList;
-
+            return block;
         }
         #endregion
 
@@ -81,7 +57,7 @@ namespace dtBlockchain
         /// <search>
         /// create, block, hash, sha256, blockchain, genesis, start
         /// </search>
-        public static List<object> CreateGenesisBlock()
+        public static Block CreateGenesisBlock()
         {
             int index = 0;
             DateTime timestamp = DateTime.Now;
@@ -92,9 +68,47 @@ namespace dtBlockchain
             {
                 hash.ComputeHash(ms);
             }
-            string previousHash = "";
-            List<object> blk = dtBlockchain.Blockchain.CreateBlock(index, timestamp, data, hash, previousHash);
+            SHA256 previousHash = SHA256.Create();
+            previousHash.Clear();
+            Block blk = dtBlockchain.Block.Create(index, timestamp, data, hash, previousHash);
             return blk;
+        }
+        #endregion
+
+    }
+
+
+
+    public class Blockchain
+    {
+
+        internal Blockchain()
+        {
+
+        }
+
+        #region Create
+        /// <summary>
+        /// Creates the initial genesis block used in a blockchain
+        /// </summary>
+        /// <param name="count">count</param>
+        /// <search>
+        /// blockchain, create
+        /// </search>
+        public static List<Block> Create(int count)
+        {
+            List<Block> blockchain = new List<Block>();
+            Block genesisBlock = dtBlockchain.Block.CreateGenesisBlock();
+
+            blockchain.Add(genesisBlock);
+
+            for (int i = 0; i < count - 1; i++)
+            {
+                Block nextBlock = dtBlockchain.Blockchain.NextBlock(blockchain[i]);
+                blockchain.Add(nextBlock);
+            }
+            return blockchain;
+
         }
         #endregion
 
@@ -107,15 +121,9 @@ namespace dtBlockchain
         /// <search>
         /// create, block, hash, sha256, blockchain, next
         /// </search>
-        public static List<object> NextBlock(List<List<object>> lastBlock)
+        public static Block NextBlock(Block lastBlock)
         {
-            List<object> obj = lastBlock.Last();
-            string str = obj[0].ToString();
-            string rep = str.Replace(" ", "");
-            string s = ":";
-            char[] c = s.ToCharArray();
-            string[] split = rep.Split(c);
-            int thisIndex = (Int32.Parse(split[1])) + 1;
+            int thisIndex = lastBlock.Index + 1;
             DateTime thisTimestamp = DateTime.Now;
             string thisData = "block" + thisIndex.ToString() + "data";
             string hashString = thisIndex.ToString() + thisTimestamp.ToString() + thisData.ToString();
@@ -124,15 +132,79 @@ namespace dtBlockchain
             {
                 thisHash.ComputeHash(ms);
             }
-            string str2 = obj[3].ToString();
-            string rep2 = str2.Replace(" ", "");
-            string[] split2 = rep2.Split(c);
-            string thisPreviousHash = split2[1];
-            var blk = dtBlockchain.Blockchain.CreateBlock(thisIndex, thisTimestamp, thisData, thisHash, thisPreviousHash);
+            SHA256 thisPreviousHash = lastBlock.ThisHash;
+            var blk = dtBlockchain.Block.Create(thisIndex, thisTimestamp, thisData, thisHash, thisPreviousHash);
             return blk;
+        }
+        #endregion
+
+    }
+
+    public class Hash
+    {
+
+        internal Hash()
+        {
+
+        }
+
+        #region Data
+        /// <summary>
+        /// Retrieves the hash data from the hash class
+        /// </summary>
+        /// <param name="hash">index</param>
+        /// <param name="str">output</param>
+        /// <search>
+        /// data, hash, sha256, block, blockchain
+        /// </search>
+        public static String Data(SHA256 hash)
+        {
+            try
+            {
+                byte[] byt = hash.Hash;
+                string hashString = string.Empty;
+                foreach (byte x in byt)
+                {
+                    hashString += String.Format("{0:x2}", x);
+                }
+                return hashString;
+            }
+
+            catch (Exception)
+            {
+                return "no data";
+                throw;
+            }
+        }
+        #endregion
+
+        #region Size
+        /// <summary>
+        /// Retrieves the size of the hash
+        /// </summary>
+        /// <param name="hash">index</param>
+        /// <param name="int">output</param>
+        /// <search>
+        /// size, length, hash, sha256, block, blockchain
+        /// </search>
+        public static int Size(SHA256 hash)
+        {
+            try
+            {
+                int i = hash.HashSize;
+                return i;
+            }
+
+            catch (Exception)
+            {
+                return 0;
+                throw;
+            }
 
         }
         #endregion
 
     }
 }
+
+
