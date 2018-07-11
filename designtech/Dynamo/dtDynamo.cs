@@ -41,7 +41,7 @@ namespace dtDynamo
         /// <summary>
         /// Retrieves the groups/annotations from the Node Graph
         /// </summary>
-        /// <param name="nodeGraph">Dynamo.Graph.NodeGraphl</param>
+        /// <param name="nodeGraph">Dynamo.Graph.NodeGraph</param>
         /// <returns name="groups">Dynamo.Graph.Annotations.AnnotationModel</returns>
         /// <search>
         /// dynamo, api, node, graph, annotation, model, groups
