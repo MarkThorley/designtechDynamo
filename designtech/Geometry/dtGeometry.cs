@@ -424,7 +424,7 @@ namespace dtGeometry
         /// </summary>
         /// <param name="surfaces"></param>
         /// <search>geometry,top,planar,surface,surfaces,ceiling</search>
-        [MultiReturn(new[] { "baseSurfaces", "otherSurfaces" })]
+        [MultiReturn(new[] { "topSurfaces", "otherSurfaces" })]
         public static Dictionary<string, object> PlanarTop(List<Surface> surfaces)
         {
             List<Double> zValues = new List<Double>();
@@ -453,7 +453,7 @@ namespace dtGeometry
             Dictionary<string, object> newOutput;
             newOutput = new Dictionary<string, object>
             {
-                {"baseSurfaces",topSrfs},
+                {"topSurfaces",topSrfs},
                 {"otherSurfaces",otherSrfs}
 
             };
