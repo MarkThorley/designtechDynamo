@@ -55,14 +55,14 @@ namespace dtRevit
 
         #region DimensionWithReference
         /// <summary>
-        /// Tags an element from a linked model in a host view.
+        /// Create a dimension in Revit based on a reference
         /// </summary>
         /// <param name="view">views</param>
-        /// <param name="line">location point</param>
-        /// <param name="references">linked element</param>
+        /// <param name="line">line</param>
+        /// <param name="references">references</param>
         /// <returns name="view">view</returns>
         /// <search>
-        /// revit, views, sheets, drawing, number, current, revision, add, separator
+        /// revit, dim, dimension, annotate, distance, reference, line
         /// </search>
         public static List<Revit.Elements.Element> DimensionWithReference(Revit.Elements.Views.View view, Autodesk.DesignScript.Geometry.Line line, Reference[] references)
         {
