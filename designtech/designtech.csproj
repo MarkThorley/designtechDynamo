@@ -185,6 +185,7 @@
   <ItemGroup>
     <Compile Include="Azure\dtAzure.cs" />
     <Compile Include="Blockchain\dtBlockchain.cs" />
+    <Compile Include="GeometryPrimitives\dtGeometryPrimitives.cs" />
     <Compile Include="Dynamo\dtDynamo.cs" />
     <Compile Include="Geometry\dtGeometry.cs" />
     <Compile Include="Core\dtCore.cs" />
