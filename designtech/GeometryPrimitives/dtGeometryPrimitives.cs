@@ -9,7 +9,12 @@ namespace dtGeometryPrimitives
 {
     public abstract class GeometryPrimitives
     {
-        Guid ID { get; set; }
+        private Guid id { get; set; }
+        public Guid ID
+        {
+            get { return id; }
+            set { id = value; }
+        }
     }
 
     public class Point : GeometryPrimitives
@@ -17,14 +22,6 @@ namespace dtGeometryPrimitives
         internal Point()
         {
 
-        }
-
-        //Fields
-        private Guid id { get; set; }
-        public Guid ID
-        {
-            get { return id; }
-            set { id = value; }
         }
 
         public double X { get; set; }
@@ -61,14 +58,6 @@ namespace dtGeometryPrimitives
         internal Line()
         {
 
-        }
-
-        //Fields
-        private Guid id { get; set; }
-        public Guid ID
-        {
-            get { return id; }
-            set { id = value; }
         }
 
         public Point StartPoint { get; set; }
@@ -108,14 +97,6 @@ namespace dtGeometryPrimitives
         internal Vector()
         {
 
-        }
-
-        //Fields
-        private Guid id { get; set; }
-        public Guid ID
-        {
-            get { return id; }
-            set { id = value; }
         }
 
         public Point StartPoint { get; set; }
