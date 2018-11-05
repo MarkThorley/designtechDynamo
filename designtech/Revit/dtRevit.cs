@@ -1523,6 +1523,43 @@ namespace dtRevit
 
         }
         #endregion
+
+        #region SetCategoryVisibility
+        /// <summary>
+        /// Sets the visibility of category in a view
+        /// </summary>
+        /// <param name="view"></param>
+        /// <param name="category"></param>
+        /// <param name="boolean"></param>
+        /// <returns name="view">views</returns>
+        /// <search>
+        /// revit, views, category, hidden, visibility, bool, boolean
+        /// </search>
+        public static object SetCategoryVisibility(Revit.Elements.Views.View view, Revit.Elements.Category category, bool boolean)
+        {
+            Document doc = RevitServices.Persistence.DocumentManager.Instance.CurrentDBDocument;
+            Autodesk.Revit.DB.Element uwView;
+            uwView = view.InternalElement;
+
+            Autodesk.Revit.DB.View rvtView = uwView as Autodesk.Revit.DB.View;
+
+            BuiltInCategory enumCategory = (BuiltInCategory)category.Id;
+            ElementId eleId = new Autodesk.Revit.DB.ElementId(enumCategory);
+
+            RevitServices.Transactions.TransactionManager.Instance.EnsureInTransaction(doc);
+            try
+            {
+                rvtView.SetCategoryHidden(eleId, boolean);
+                RevitServices.Transactions.TransactionManager.Instance.TransactionTaskDone();
+                return view;
+            }
+            catch (Exception ex)
+            {
+
+                throw new ArgumentException(ex.Message);
+            }
+        }
+        #endregion
     }
 }
     
