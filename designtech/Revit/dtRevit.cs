@@ -1526,16 +1526,16 @@ namespace dtRevit
 
         #region SetCategoryVisibility
         /// <summary>
-        /// Sets the visibility of category in a view
+        /// Sets the visibility of a category in a view or view template. To hide the elements select true.
         /// </summary>
         /// <param name="view"></param>
         /// <param name="category"></param>
-        /// <param name="boolean"></param>
+        /// <param name="boolean">select true to hide the category</param>
         /// <returns name="view">views</returns>
         /// <search>
         /// revit, views, category, hidden, visibility, bool, boolean
         /// </search>
-        public static object SetCategoryVisibility(Revit.Elements.Views.View view, Revit.Elements.Category category, bool boolean)
+        public static object SetCategoryVisibility(Revit.Elements.Views.View view, Revit.Elements.Category category, bool boolean = false)
         {
             Document doc = RevitServices.Persistence.DocumentManager.Instance.CurrentDBDocument;
             Autodesk.Revit.DB.Element uwView;
