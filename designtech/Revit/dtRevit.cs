@@ -955,6 +955,67 @@ namespace dtRevit
         }
         #endregion
 
+        #region RemoveParameter
+        /// <summary>
+        /// Removes a family parameter from a family.
+        /// </summary>
+        /// <param name="loadedFamily">the parent Revit family</param>
+        /// <param name="paramName">the name of the parameter to remove</param>
+        /// <returns name="element">the changed element</returns>
+        /// <search>
+        /// revit, remove, parameter, name, family, instance, type
+        /// </search>
+        public static object RemoveParameter(Revit.Elements.Family loadedFamily, string paramName)
+        {
+            Document doc = RevitServices.Persistence.DocumentManager.Instance.CurrentDBDocument;
+
+            Autodesk.Revit.DB.Element uwFam = loadedFamily.InternalElement;
+            Autodesk.Revit.DB.Family fam = uwFam as Autodesk.Revit.DB.Family;
+
+            RevitServices.Transactions.TransactionManager.Instance.ForceCloseTransaction();
+
+            Document famDoc = doc.EditFamily(fam);
+            FamilyManager familyManager = famDoc.FamilyManager;
+
+            if (familyManager == null)
+            {
+                return "Could not open a family for edit";
+            }
+
+            else
+            {
+                using (Transaction RemoveParameters = new Transaction(famDoc, "Remove Parameter"))
+                {
+                    RemoveParameters.Start();
+                    FamilyParameter param = familyManager.get_Parameter(paramName);
+
+                    Definition def = param.Definition;
+                    BuiltInParameterGroup bGroup = def.ParameterGroup;           
+
+                    if (param != null)
+                    {
+                        familyManager.RemoveParameter(param);
+                        RemoveParameters.Commit();
+                    }
+                    else
+                    {
+                        RemoveParameters.RollBack();
+                    }
+
+                    if (RemoveParameters.GetStatus() != TransactionStatus.Committed)
+                    {
+                        return "Could not make the changes in the family";
+                    }
+
+                    LoadOpts famLoadOptions = new LoadOpts();
+                    Autodesk.Revit.DB.Family newFam = famDoc.LoadFamily(doc, famLoadOptions);
+
+                    return newFam.ToDSType(true);
+                }
+            }
+        }
+        #endregion
+
         #region ReplaceFamilyParameter
         /// <summary>
         /// Replace a family parameter with a shared parameter.
@@ -1535,7 +1596,7 @@ namespace dtRevit
         /// <search>
         /// revit, views, category, hidden, visibility, bool, boolean
         /// </search>
-        public static object SetCategoryVisibility(Revit.Elements.Views.View view, Revit.Elements.Category category, bool boolean = false)
+        public static Revit.Elements.Views.View SetCategoryVisibility(Revit.Elements.Views.View view, Revit.Elements.Category category, bool boolean = false)
         {
             Document doc = RevitServices.Persistence.DocumentManager.Instance.CurrentDBDocument;
             Autodesk.Revit.DB.Element uwView;
@@ -1557,6 +1618,49 @@ namespace dtRevit
             {
 
                 throw new ArgumentException(ex.Message);
+            }
+        }
+        #endregion
+
+        #region SetViewTemplateParameter
+        /// <summary>
+        /// Sets the boolean whether to include a parameter in a view template
+        /// </summary>
+        /// <param name="viewTemplate">the view template</param>
+        /// <param name="paramName">the name of the parameter to set</param>
+        /// <returns name="viewTemplate">the changed element</returns>
+        /// <search>
+        /// revit, parameter, view, template, toggle
+        /// </search>
+        public static object SetViewTemplateParameter(Revit.Elements.Views.View viewTemplate, string paramName)
+        {
+            Document doc = RevitServices.Persistence.DocumentManager.Instance.CurrentDBDocument;
+
+            Autodesk.Revit.DB.Element uwView = viewTemplate.InternalElement;
+            Autodesk.Revit.DB.View view = uwView as Autodesk.Revit.DB.View;
+
+            RevitServices.Transactions.TransactionManager.Instance.ForceCloseTransaction();
+
+            using (Transaction SetParam = new Transaction(doc, "SetParam"))
+            {
+
+                SetParam.Start();
+                //creating a list so that I can use linq
+                var viewparams = new List<Autodesk.Revit.DB.Parameter>();
+                foreach (Autodesk.Revit.DB.Parameter p in view.Parameters)
+                {
+                    viewparams.Add(p);
+                }
+
+                //getting parameters by name (safety checks needed)
+                var modelOverrideParam = viewparams.Where(p => p.Definition.Name == paramName).First();
+
+                //setting includes
+                view.SetNonControlledTemplateParameterIds(new List<ElementId> { modelOverrideParam.Id });
+
+                SetParam.Commit();
+
+                return viewTemplate;
             }
         }
         #endregion
