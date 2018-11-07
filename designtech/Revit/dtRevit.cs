@@ -955,6 +955,7 @@ namespace dtRevit
         }
         #endregion
 
+        /*
         #region RemoveParameter
         /// <summary>
         /// Removes a family parameter from a family.
@@ -1015,6 +1016,7 @@ namespace dtRevit
             }
         }
         #endregion
+        */
 
         #region ReplaceFamilyParameter
         /// <summary>
@@ -1591,7 +1593,7 @@ namespace dtRevit
         /// </summary>
         /// <param name="view"></param>
         /// <param name="category"></param>
-        /// <param name="boolean">select true to hide the category</param>
+        /// <param name="boolean">select true to hide the category or false to make the cateogry visible</param>
         /// <returns name="view">views</returns>
         /// <search>
         /// revit, views, category, hidden, visibility, bool, boolean
@@ -1628,40 +1630,69 @@ namespace dtRevit
         /// </summary>
         /// <param name="viewTemplate">the view template</param>
         /// <param name="paramName">the name of the parameter to set</param>
+        /// <param name="boolean">select true to include the parameter in the view template or false to not include the parameter in the view template</param>
         /// <returns name="viewTemplate">the changed element</returns>
         /// <search>
         /// revit, parameter, view, template, toggle
         /// </search>
-        public static object SetViewTemplateParameter(Revit.Elements.Views.View viewTemplate, string paramName)
+        public static object SetViewTemplateParameter(Revit.Elements.Views.View viewTemplate, string paramName, bool boolean)
         {
             Document doc = RevitServices.Persistence.DocumentManager.Instance.CurrentDBDocument;
 
             Autodesk.Revit.DB.Element uwView = viewTemplate.InternalElement;
             Autodesk.Revit.DB.View view = uwView as Autodesk.Revit.DB.View;
 
-            RevitServices.Transactions.TransactionManager.Instance.ForceCloseTransaction();
-
-            using (Transaction SetParam = new Transaction(doc, "SetParam"))
+            RevitServices.Transactions.TransactionManager.Instance.EnsureInTransaction(doc);
+            try
             {
-
-                SetParam.Start();
                 //creating a list so that I can use linq
                 var viewparams = new List<Autodesk.Revit.DB.Parameter>();
+                var names = new List<string>();
                 foreach (Autodesk.Revit.DB.Parameter p in view.Parameters)
                 {
                     viewparams.Add(p);
+                    names.Add(p.Definition.Name);
                 }
 
                 //getting parameters by name (safety checks needed)
                 var modelOverrideParam = viewparams.Where(p => p.Definition.Name == paramName).First();
 
-                //setting includes
-                view.SetNonControlledTemplateParameterIds(new List<ElementId> { modelOverrideParam.Id });
+                if (boolean == false)
+                {
+                    //Get current parameters not marked to be included
+                    List<ElementId> nonUsedParams = view.GetNonControlledTemplateParameterIds().ToList();
+                    nonUsedParams.Add(modelOverrideParam.Id);
 
-                SetParam.Commit();
+                    //setting includes
+                    view.SetNonControlledTemplateParameterIds(nonUsedParams);
+                }
+                else
+                {
+                    //Get current parameters not marked to be included
+                    List<ElementId> nonUsedParams = view.GetNonControlledTemplateParameterIds().ToList();
+                    try
+                    {
+                        nonUsedParams.Remove(modelOverrideParam.Id);
+                    }
+                    catch (Exception)
+                    {
+                        throw;
+                    }
 
-                return viewTemplate;
+                    //setting includes
+                    view.SetNonControlledTemplateParameterIds(nonUsedParams);
+                }
+
             }
+            catch (Exception ex)
+            {
+
+                throw new ArgumentException(ex.Message);
+            }
+            RevitServices.Transactions.TransactionManager.Instance.TransactionTaskDone();
+
+            return viewTemplate;
+
         }
         #endregion
     }
