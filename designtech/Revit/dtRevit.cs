@@ -955,7 +955,6 @@ namespace dtRevit
         }
         #endregion
 
-        /*
         #region RemoveParameter
         /// <summary>
         /// Removes a family parameter from a family.
@@ -990,22 +989,22 @@ namespace dtRevit
                     RemoveParameters.Start();
                     FamilyParameter param = familyManager.get_Parameter(paramName);
 
-                    Definition def = param.Definition;
-                    BuiltInParameterGroup bGroup = def.ParameterGroup;           
+                    if (param == null)
+                    {
+                        RemoveParameters.RollBack();
+                        return "Error - The parameter does not exist in the family";
+                    }
 
-                    if (param != null)
+                    if (param.Id.IntegerValue < 0)
+                    {
+                        RemoveParameters.RollBack();
+                        return "Error - The parameter is a BuiltIn Parameter and cannot be removed";
+                    }
+
+                    if (param != null && param.Id.IntegerValue > 0)
                     {
                         familyManager.RemoveParameter(param);
                         RemoveParameters.Commit();
-                    }
-                    else
-                    {
-                        RemoveParameters.RollBack();
-                    }
-
-                    if (RemoveParameters.GetStatus() != TransactionStatus.Committed)
-                    {
-                        return "Could not make the changes in the family";
                     }
 
                     LoadOpts famLoadOptions = new LoadOpts();
@@ -1016,7 +1015,6 @@ namespace dtRevit
             }
         }
         #endregion
-        */
 
         #region ReplaceFamilyParameter
         /// <summary>
