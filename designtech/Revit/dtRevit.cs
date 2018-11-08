@@ -1622,7 +1622,68 @@ namespace dtRevit
         }
         #endregion
 
-        #region SetViewTemplateParameter
+    }
+
+    public class ViewTemplate
+    {
+        internal ViewTemplate()
+        {
+
+        }
+
+        #region Parameters
+        /// <summary>
+        /// Gets the parameters of the View Template
+        /// </summary>
+        /// <param name="viewTemplate">the view template</param>
+        /// <search>
+        /// revit, parameter, view, template, toggle
+        /// </search>
+        [MultiReturn(new[] { "includedParams", "excludedParams" })]
+        public static Dictionary<string, List<Revit.Elements.Parameter>> Parameters(Revit.Elements.Views.View viewTemplate)
+        {
+            Document doc = RevitServices.Persistence.DocumentManager.Instance.CurrentDBDocument;
+
+            Revit.Elements.Element ele = viewTemplate as Revit.Elements.Element;
+
+            List<Revit.Elements.Parameter> paramSet = ele.Parameters.Cast<Revit.Elements.Parameter>().ToList();
+
+            var allParams = new List<ElementId>();
+            foreach (var p in paramSet)
+            {
+                allParams.Add(new ElementId(p.Id));
+            }
+
+            Autodesk.Revit.DB.Element uwView = viewTemplate.InternalElement;
+            Autodesk.Revit.DB.View view = uwView as Autodesk.Revit.DB.View;
+
+            //Get current parameters not marked to be included
+            List<ElementId> nonUsedParams = view.GetNonControlledTemplateParameterIds().ToList();
+
+            List<int> indices = new List<int>();
+            foreach (ElementId item in nonUsedParams)
+            {
+                indices.Add(allParams.IndexOf(item));
+            }
+
+            List<Revit.Elements.Parameter> exclParams = new List<Revit.Elements.Parameter>();
+            foreach (int ind in indices.OrderByDescending(x => x))
+            {
+                exclParams.Add(paramSet[ind]);
+                paramSet.RemoveAt(ind);
+            }
+ 
+            Dictionary<string, List<Revit.Elements.Parameter>> newOutput;
+            newOutput = new Dictionary<string, List<Revit.Elements.Parameter>>
+                {
+                    {"includedParams",paramSet},
+                    {"excludedParams",exclParams}
+                };
+            return newOutput;
+        }
+        #endregion
+
+        #region SetParameters
         /// <summary>
         /// Sets the boolean whether to include a parameter in a view template
         /// </summary>
@@ -1633,7 +1694,7 @@ namespace dtRevit
         /// <search>
         /// revit, parameter, view, template, toggle
         /// </search>
-        public static object SetViewTemplateParameter(Revit.Elements.Views.View viewTemplate, string paramName, bool boolean)
+        public static object SetParameters(Revit.Elements.Views.View viewTemplate, string paramName, bool boolean)
         {
             Document doc = RevitServices.Persistence.DocumentManager.Instance.CurrentDBDocument;
 
@@ -1645,11 +1706,9 @@ namespace dtRevit
             {
                 //creating a list so that I can use linq
                 var viewparams = new List<Autodesk.Revit.DB.Parameter>();
-                var names = new List<string>();
                 foreach (Autodesk.Revit.DB.Parameter p in view.Parameters)
                 {
                     viewparams.Add(p);
-                    names.Add(p.Definition.Name);
                 }
 
                 //getting parameters by name (safety checks needed)
@@ -1693,6 +1752,7 @@ namespace dtRevit
 
         }
         #endregion
+
     }
 }
     
