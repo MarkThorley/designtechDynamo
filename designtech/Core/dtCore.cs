@@ -92,11 +92,22 @@ namespace dtCore
             int max = lengths.Max();
 
             List<string> output = new List<string>();
-            foreach (int i in numbers)
+            if (max <= 1)
             {
-                string format = "D" + max.ToString();
-                output.Add(i.ToString(format));
+                foreach (int i in numbers)
+                {
+                    output.Add("0" + i.ToString());
+                }
             }
+            else
+            {
+                foreach (int i in numbers)
+                {
+                    string format = "D" + max.ToString();
+                    output.Add(i.ToString(format));
+                }
+            }
+        
             return output;
         }
         #endregion
