@@ -18,7 +18,7 @@ using Revit.GeometryConversion;
 using DynamoConversions;
 using DSCore;
 using Revit.GeometryObjects;
-
+using System.IO;
 
 namespace dtRevit
 {
@@ -955,6 +955,148 @@ namespace dtRevit
         }
         #endregion
 
+        #region CleanParameters
+        /// <summary>
+        /// Removes all the non-built in parameters from a family, except the ones specified
+        /// </summary>
+        /// <param name="loadedFamily">the parent Revit family</param>
+        /// <param name="paramNames">a list of parameter names to retain. To enter no names use an empty string ""</param>
+        /// <param name="removeSharedParams">a boolean whether to remove any shared parameters</param>
+        /// <param name="removeAssociatedParams">a boolean whether to remove any associated params</param>
+        /// <returns name="element">the changed element</returns>
+        /// <search>
+        /// revit, remove, parameter, name, family, instance, type
+        /// </search>
+        public static object CleanParameters(Revit.Elements.Family loadedFamily, List<string> paramNames, bool removeSharedParams = false, bool removeAssociatedParams = false)
+        {
+            Document doc = RevitServices.Persistence.DocumentManager.Instance.CurrentDBDocument;
+
+            Autodesk.Revit.DB.Element uwFam = loadedFamily.InternalElement;
+            Autodesk.Revit.DB.Family fam = uwFam as Autodesk.Revit.DB.Family;
+
+            Options options = new Options();
+            options.IncludeNonVisibleObjects = true;
+
+            RevitServices.Transactions.TransactionManager.Instance.ForceCloseTransaction();
+
+            Document famDoc = doc.EditFamily(fam);
+            FamilyManager familyManager = famDoc.FamilyManager;
+
+
+            if (familyManager == null)
+            {
+                return "Could not open a family for edit";
+            }
+
+            else
+            {
+                using (Transaction CleanParameters = new Transaction(famDoc, "Clean Parameters"))
+                {
+                    CleanParameters.Start();
+                    List<FamilyParameter> param = familyManager.GetParameters().ToList();
+
+                    if (param == null)
+                    {
+                        CleanParameters.RollBack();
+                        return "Error - No parameters could be found in the family";
+                    }
+
+                    List<string> familyParamNames = new List<string>();
+
+                    foreach (FamilyParameter p in param)
+                    {
+                        familyParamNames.Add(p.Definition.Name);
+                    }
+
+                    List<int> ind = new List<int>();
+
+                    if (paramNames != null)
+                    {
+                        for (int i = 0; i < paramNames.Count; i++)
+                        {
+                            if (familyParamNames.Contains(paramNames[i]))
+                            {
+                                int index = familyParamNames.IndexOf(paramNames[i]);
+                                ind.Add(index);
+                            }
+                        }
+
+                        ind.Sort();
+                        ind.Reverse();
+
+                        foreach (int i in ind)
+                        {
+                            param.RemoveAt(i);
+                            familyParamNames.RemoveAt(i);
+                        }
+
+                        ind.Clear();
+                    }
+
+                    if (removeSharedParams == false)
+                    {
+                        for (int i = 0; i < param.Count; i++)
+                        {
+                            if (param[i].IsShared)
+                            {
+                                ind.Add(i);
+                            }
+                        }
+
+                        ind.Sort();
+                        ind.Reverse();
+
+                        foreach (int i in ind)
+                        {
+                            param.RemoveAt(i);
+                            familyParamNames.RemoveAt(i);
+                        }
+
+                        ind.Clear();
+                    }
+
+                    if (removeAssociatedParams == false)
+                    {
+                        for (int i = 0; i < param.Count; i++)
+                        {
+                            if (param[i].AssociatedParameters.Size > 0)
+                            {
+                                ind.Add(i);
+                            }
+                        }
+
+                        ind.Sort();
+                        ind.Reverse();
+
+                        foreach (int i in ind)
+                        {
+                            param.RemoveAt(i);
+                            familyParamNames.RemoveAt(i);
+                        }
+
+                        ind.Clear();
+                    }
+
+
+                    foreach (FamilyParameter p in param)
+                    {
+                        if (p.Id.IntegerValue > 0)
+                        {
+                            familyManager.RemoveParameter(p);
+                        }
+                    }
+                    CleanParameters.Commit();
+
+
+                    LoadOpts famLoadOptions = new LoadOpts();
+                    Autodesk.Revit.DB.Family newFam = famDoc.LoadFamily(doc, famLoadOptions);
+
+                    return newFam.ToDSType(true);
+                }
+            }
+        }
+        #endregion
+
         #region RemoveParameter
         /// <summary>
         /// Removes a family parameter from a family.
@@ -1147,6 +1289,31 @@ namespace dtRevit
 
                 return newFam.ToDSType(true);
              }
+        }
+        #endregion
+
+        #region SharedParameterFile
+        /// <summary>
+        /// Returns the information in the shared parameter file
+        /// </summary>
+        /// <param name="filePath">the location of the shared parameter file</param>
+        /// <returns name="str">the text in the shared parameter file</returns>
+        /// <search>
+        /// revit, shared, parameter, file, names, groups
+        /// </search>
+        public static object SharedParameterFile(string filePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                return "Error - File does not exist!";
+
+            }
+
+            string[] lines = File.ReadAllLines(filePath);
+
+            return lines;
+
+
         }
         #endregion
 

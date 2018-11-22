@@ -532,34 +532,6 @@ namespace dtDynamo
 
         }
 
-        /*#region Create
-        /// <summary>
-        /// Creates a new note
-        /// </summary>
-        /// <param name="x">double</param>
-        /// <param name="y">double</param>
-        /// <param name="text">string</param>
-        /// <param name="fileName">string</param>
-        /// <returns name="note">guid</returns>
-        /// <search>
-        /// dynamo, api, note, model, guid
-        /// </search>
-        public static Dynamo.Graph.Notes.NoteModel Create(double x, double y, string text, string fileName)
-        {
-            Guid guid = new Guid();
-            Dynamo.Graph.Notes.NoteModel note = new Dynamo.Graph.Notes.NoteModel(x, y, text, guid);
-            Dynamo.Graph.Workspaces.WorkspaceModel ws = Workspace.Current();
-
-            System.Xml.XmlDocument doc = new System.Xml.XmlDocument();
-            doc.Load(fileName);
-            Dynamo.Graph.SaveContext saveContext = Dynamo.Graph.SaveContext.Preset;
-            note.Serialize(doc, saveContext);
-            doc.Save(fileName);
-
-            return note;
-        }
-        #endregion*/
-
         #region GUID
         /// <summary>
         /// Retrieves the guid of the note
